@@ -1,0 +1,23 @@
+env: bearer5
+
+env_args:
+  n_agents: 11
+  agent_distribution: [2, 3, 6]
+  agent_capacity: [3, 2, 1]
+  episode_limit: 100
+  map_size: 12
+  map_division: [4, 8, 12]
+  deliver_reward: [5, 2, 1]
+  pick_reward: 0.1
+  deliver_cost: 0
+  gen_rate: 0.5
+  gen_division: [0,0,1]
+  sight_range: 3
+
+learner_log_interval: 10000
+log_interval: 10000
+runner_log_interval: 10000
+t_max: 5005000
+test_interval: 10000
+test_nepisode: 300
+test_greedy: True
