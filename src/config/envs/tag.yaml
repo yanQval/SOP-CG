@@ -1,4 +1,4 @@
-env: chasing
+env: tag
 
 env_args:
   n_good_agents: 3

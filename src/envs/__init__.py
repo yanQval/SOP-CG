@@ -7,9 +7,8 @@ from .aloha import AlohaEnv
 from .hallway import HallwayEnv
 from .hallwaykai import HallwayKaiEnv
 from .coordination_games import MatchingGameEnv
-from .chasing import ChasingEnv
-#from .postman import PostmanEnv
-from .toygame2 import Toy2Env
+from .tag import TagEnv
+from .toygame import ToyEnv
 from .disperse import DisperseEnv
 from .gather import GatherEnv
 import sys
@@ -27,9 +26,9 @@ REGISTRY["aloha"] = partial(env_fn, env=AlohaEnv)
 REGISTRY["hallway"] = partial(env_fn, env=HallwayEnv)
 REGISTRY["hallwaykai"] = partial(env_fn, env=HallwayKaiEnv)
 REGISTRY["coordination_game_matching"] = partial(env_fn, env=MatchingGameEnv)
-REGISTRY["chasing"] = partial(env_fn, env=ChasingEnv)
+REGISTRY["tag"] = partial(env_fn, env=TagEnv)
 #REGISTRY["postman"] = partial(env_fn, env=PostmanEnv)
-REGISTRY["toygame2"] = partial(env_fn, env=Toy2Env)
+REGISTRY["toygame"] = partial(env_fn, env=ToyEnv)
 REGISTRY["disperse"] = partial(env_fn, env=DisperseEnv)
 REGISTRY["gather"] = partial(env_fn, env=GatherEnv)
 

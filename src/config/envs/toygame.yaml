@@ -1,4 +1,4 @@
-env: toygame2
+env: toygame
 
 env_args:
   n_groups: 5

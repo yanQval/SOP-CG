@@ -16,7 +16,7 @@ from absl import logging
 import random
 
 
-class Toy2Env(MultiAgentEnv):
+class ToyEnv(MultiAgentEnv):
     """The StarCraft II environment for decentralised multi-agent
     micromanagement scenarios.
     """

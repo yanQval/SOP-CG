@@ -8,7 +8,7 @@ import torch as th
 import time
 
 
-class ChasingEnv(MultiAgentEnv_):
+class TagEnv(MultiAgentEnv_):
     def __init__(
             self,
             n_good_agents=1,

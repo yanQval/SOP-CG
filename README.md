@@ -13,7 +13,7 @@ python src/main.py --config=sopcg --env-config=pursuit with construction='tree' 
 
 To run experiment on Tag:
 ```shell
-python src/main.py --config=sopcg_vs_vdn --env-config=chasing with construction='tree' use_action_repr=False
+python src/main.py --config=sopcg_vs_vdn --env-config=tag with construction='tree' use_action_repr=False
 ```
 
 To run experiments on SMAC benchmark:
