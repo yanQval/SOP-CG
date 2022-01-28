@@ -9,5 +9,5 @@ REGISTRY = {}
 REGISTRY["q_learner"] = QLearner
 REGISTRY["coma_learner"] = COMALearner
 REGISTRY["qtran_learner"] = QTranLearner
-REGISTRY["sopcg_learner"] = SocgLearner
+REGISTRY["sopcg_learner"] = SopcgLearner
 REGISTRY["dcg_learner"] = DCGLearner
