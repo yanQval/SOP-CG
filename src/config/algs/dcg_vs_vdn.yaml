@@ -54,3 +54,10 @@ adv_double_q: True
 adv_mixer: "vdn"
 
 adv_name: "vdn"
+
+
+action_encoder: "obs_reward"
+use_action_repr: False
+action_latent_dim: 20
+state_latent_dim: 32
+action_repr_learning_phase: 40000

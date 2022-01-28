@@ -7,13 +7,11 @@ from .aloha import AlohaEnv
 from .hallway import HallwayEnv
 from .hallwaykai import HallwayKaiEnv
 from .coordination_games import MatchingGameEnv
-from .bearer import BearerEnv
-from .bearer2 import Bearer2Env
-from .bearer3 import Bearer3Env
-from .bearer4 import Bearer4Env
-from .bearer5 import Bearer5Env
-from .bearer6 import Bearer6Env
 from .chasing import ChasingEnv
+#from .postman import PostmanEnv
+from .toygame2 import Toy2Env
+from .disperse import DisperseEnv
+from .gather import GatherEnv
 import sys
 import os
 
@@ -29,13 +27,11 @@ REGISTRY["aloha"] = partial(env_fn, env=AlohaEnv)
 REGISTRY["hallway"] = partial(env_fn, env=HallwayEnv)
 REGISTRY["hallwaykai"] = partial(env_fn, env=HallwayKaiEnv)
 REGISTRY["coordination_game_matching"] = partial(env_fn, env=MatchingGameEnv)
-REGISTRY["bearer"] = partial(env_fn, env=BearerEnv)
-REGISTRY["bearer2"] = partial(env_fn, env=Bearer2Env)
-REGISTRY["bearer3"] = partial(env_fn, env=Bearer3Env)
-REGISTRY["bearer4"] = partial(env_fn, env=Bearer4Env)
-REGISTRY["bearer5"] = partial(env_fn, env=Bearer5Env)
-REGISTRY["bearer6"] = partial(env_fn, env=Bearer6Env)
 REGISTRY["chasing"] = partial(env_fn, env=ChasingEnv)
+#REGISTRY["postman"] = partial(env_fn, env=PostmanEnv)
+REGISTRY["toygame2"] = partial(env_fn, env=Toy2Env)
+REGISTRY["disperse"] = partial(env_fn, env=DisperseEnv)
+REGISTRY["gather"] = partial(env_fn, env=GatherEnv)
 
 if sys.platform == "linux":
     os.environ.setdefault("SC2PATH",

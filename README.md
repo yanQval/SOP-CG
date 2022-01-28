@@ -5,11 +5,23 @@ of the SOP-CG algorithm.
 
 ## Run an experiment 
 
-Tasks can be found in `src/envs`. To run experiments:
+Tasks can be found in `src/envs`. To run experiments on MACO benchmark:
 
 ```shell
-python src/main.py --config=socg --env-config=pursuit with construction='tree'
+python src/main.py --config=sopcg --env-config=pursuit with construction='tree' use_action_repr=False
 ```
+
+To run experiment on Tag:
+```shell
+python src/main.py --config=sopcg_vs_vdn --env-config=chasing with construction='tree' use_action_repr=False
+```
+
+To run experiments on SMAC benchmark:
+```shell
+python src/main.py --config=sopcg --env-config=sc2 with env_args.map_name='10m_vs_11m' construction='tree' use_action_repr=True
+```
+
+The hyperparameter `construction` is used to control the graph class, where `tree` represents $\mathcal{G}_H$, and `matching` represents $\mathcal{G}_P$. By default, it is set to `tree`. The hyperparameter `use_action_repr` is set `False` by default. Setting `True` would use the action representation technique.
 
 The requirements.txt file can be used to install the necessary packages into a virtual environment.
 

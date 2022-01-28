@@ -1,10 +1,21 @@
 from .q_learner import QLearner
 from components.episode_buffer import EpisodeBatch
 import torch as th
+from torch.optim import RMSprop
 
 
 class DCGLearner(QLearner):
     """ QLearner for a Deep Coordination Graph (DCG, Boehmer et al., 2020). """
+
+    def __init__(self, mac, scheme, logger, args):
+        super(DCGLearner, self).__init__(mac, scheme, logger, args)
+        
+        # action encoder
+        self.use_action_repr = args.use_action_repr
+        if self.use_action_repr:
+            self.action_encoder_params = list(self.mac.action_encoder_params())
+            self.action_encoder_optimiser = RMSprop(params=self.action_encoder_params, lr=args.lr, alpha=args.optim_alpha, eps=args.optim_eps)
+            self.action_repr_updating = True
 
     def train(self, batch: EpisodeBatch, t_env: int, episode_num: int):
         """ Overrides the train method from QLearner. """
@@ -51,6 +62,40 @@ class DCGLearner(QLearner):
         grad_norm = th.nn.utils.clip_grad_norm_(self.params, self.args.grad_norm_clip)
         self.optimiser.step()
 
+        
+        # Learning action representation
+        if self.use_action_repr:
+            pred_obs_loss = None
+            pred_r_loss = None
+            pred_grad_norm = None
+            if self.action_repr_updating:
+                # train action encoder
+                no_pred = []
+                r_pred = []
+                for t in range(batch.max_seq_length):
+                    no_preds, r_preds = self.mac.action_repr_forward(batch, t=t)
+                    no_pred.append(no_preds)
+                    r_pred.append(r_preds)
+                no_pred = th.stack(no_pred, dim=1)[:, :-1]  # Concat over time
+                r_pred = th.stack(r_pred, dim=1)[:, :-1]
+                no = batch["obs"][:, 1:].detach().clone()
+                repeated_rewards = batch["reward"][:, :-1].detach().clone().unsqueeze(2).repeat(1, 1, self.args.n_agents, 1)
+
+                pred_obs_loss = th.sqrt(((no_pred - no) ** 2).sum(dim=-1)).mean()
+                pred_r_loss = ((r_pred - repeated_rewards) ** 2).mean()
+
+                pred_loss = pred_obs_loss + 10 * pred_r_loss
+                self.action_encoder_optimiser.zero_grad()
+                pred_loss.backward()
+                pred_grad_norm = th.nn.utils.clip_grad_norm_(self.action_encoder_params, self.args.grad_norm_clip)
+                self.action_encoder_optimiser.step()
+
+                if t_env > self.args.action_repr_learning_phase:
+                    self.mac.update_action_repr()
+                    self.action_repr_updating = False
+                    self._update_targets()
+                    self.last_target_update_episode = episode_num
+
         # Update target network if it is time
         if (episode_num - self.last_target_update_episode) / self.args.target_update_interval >= 1.0:
             self._update_targets()
@@ -65,3 +110,11 @@ class DCGLearner(QLearner):
             self.logger.log_stat("q_taken_mean", (mac_out * mask).sum().item()/(mask_elems * self.args.n_agents), t_env)
             self.logger.log_stat("target_mean", (targets * mask).sum().item()/(mask_elems * self.args.n_agents), t_env)
             self.log_stats_t = t_env
+
+    def _update_targets(self):
+        self.target_mac.load_state(self.mac)
+        if self.mixer is not None:
+            self.target_mixer.load_state_dict(self.mixer.state_dict())
+        self.logger.console_logger.info("Updated target network")
+        if self.use_action_repr:
+            self.target_mac.action_repr_updating = self.action_repr_updating

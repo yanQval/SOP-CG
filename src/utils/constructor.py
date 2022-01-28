@@ -178,6 +178,69 @@ class TreeSolver:
         new_graphs = th.tensor(copy.deepcopy(_graphs)).to(dtype=graphs.dtype, device=graphs.device)
         return new_graphs
 
+class LineSolver:
+    def __init__(self, args):
+        self.tree_lib = load_c_lib('./src/utils/tree.cpp')
+        self.individual_q = args.individual_q
+
+        n = args.n_agents
+        self.line_graph = th.zeros((n, n))
+        for i in range(n - 1):
+            self.line_graph[i, i + 1] = 1.
+            self.line_graph[i + 1, i] = 1.
+    
+    def solve(self, f, g, avail_actions, device):
+        bs, n, m = f.shape
+
+        best_graphs = self.line_graph.clone().detach().unsqueeze(0).repeat(bs, 1, 1).to(device)
+  
+        return best_graphs
+
+    def solve_given_actions(self, f, g, actions, device):
+        bs, n, m = f.shape
+
+        best_graphs = self.line_graph.clone().detach().unsqueeze(0).repeat(bs, 1, 1).to(device)
+
+        return best_graphs
+
+    def graph_epsilon_greedy(self, graphs, eps):
+        _graphs = np.array(copy.deepcopy(graphs.detach()).cpu()).astype(ctypes.c_double)
+        self.tree_lib.graph_epsilon_greedy(c_ptr(_graphs), graphs.shape[0], graphs.shape[1], c_double(eps))
+        new_graphs = th.tensor(copy.deepcopy(_graphs)).to(dtype=graphs.dtype, device=graphs.device)
+        return new_graphs
+
+
+class StarSolver:
+    def __init__(self, args):
+        self.tree_lib = load_c_lib('./src/utils/tree.cpp')
+        self.individual_q = args.individual_q
+
+        n = args.n_agents
+        self.star_graph = th.zeros((n, n))
+        for i in range(n - 1):
+            self.star_graph[0, i + 1] = 1.
+            self.star_graph[i + 1, 0] = 1.
+    
+    def solve(self, f, g, avail_actions, device):
+        bs, n, m = f.shape
+
+        best_graphs = self.star_graph.clone().detach().unsqueeze(0).repeat(bs, 1, 1).to(device)
+
+        return best_graphs
+
+    def solve_given_actions(self, f, g, actions, device):
+        bs, n, m = f.shape
+
+        best_graphs = self.star_graph.clone().detach().unsqueeze(0).repeat(bs, 1, 1).to(device)
+
+        return best_graphs
+
+    def graph_epsilon_greedy(self, graphs, eps):
+        _graphs = np.array(copy.deepcopy(graphs.detach()).cpu()).astype(ctypes.c_double)
+        self.tree_lib.graph_epsilon_greedy(c_ptr(_graphs), graphs.shape[0], graphs.shape[1], c_double(eps))
+        new_graphs = th.tensor(copy.deepcopy(_graphs)).to(dtype=graphs.dtype, device=graphs.device)
+        return new_graphs
+
 
 class Constructor:
     def __init__(self, args):
@@ -212,7 +275,7 @@ class Constructor:
                 g = g.max(dim=-1)[0]
                 isolated_nodes = th.max(1 - graphs.sum(dim=-1), th.zeros_like(graphs.sum(dim=-1)))
                 agent_outputs = f * isolated_nodes.unsqueeze(-1) + (g * graphs.unsqueeze(-1)).sum(dim=-2) / 2  # /2 since each edge is computed twice
-        elif self.args.construction == 'tree':
+        elif self.args.construction in ['tree', 'line', 'star'] :
             bs, n, m = f.shape[0], f.shape[1], self.n_actions
 
             if self.args.individual_q:

@@ -7,6 +7,8 @@ import itertools
 import torch_scatter
 from math import factorial
 from random import randrange
+from modules.action_encoders import REGISTRY as action_encoder_REGISTRY
+import copy
 
 
 class DeepCoordinationGraphMAC(BasicMAC):
@@ -22,10 +24,23 @@ class DeepCoordinationGraphMAC(BasicMAC):
         self.iterations = args.msg_iterations
         self.normalized = args.msg_normalized
         self.anytime = args.msg_anytime
+
+        # action representation
+        self.use_action_repr = args.use_action_repr
+        if self.use_action_repr:
+            self.action_encoder = action_encoder_REGISTRY[args.action_encoder](args)
+            self.action_repr = th.ones(self.n_actions, self.args.action_latent_dim).to(args.device)
+            input_i = self.action_repr.unsqueeze(1).repeat(1, self.n_actions, 1)
+            input_j = self.action_repr.unsqueeze(0).repeat(self.n_actions, 1, 1)
+            self.p_action_repr = th.cat([input_i, input_j], dim=-1).view(self.n_actions * self.n_actions, -1).t().unsqueeze(0)
+
         # Create neural networks for utilities and payoff functions
         self.utility_fun = self._mlp(self.args.rnn_hidden_dim, args.cg_utilities_hidden_dim, self.n_actions)
         payoff_out = 2 * self.payoff_rank * self.n_actions if self.payoff_decomposition else self.n_actions ** 2
-        self.payoff_fun = self._mlp(2 * self.args.rnn_hidden_dim, args.cg_payoffs_hidden_dim, payoff_out)
+        if self.use_action_repr:
+            self.payoff_fun = self._mlp(2 * self.args.rnn_hidden_dim, args.cg_payoffs_hidden_dim, 2 * self.args.action_latent_dim)
+        else:
+            self.payoff_fun = self._mlp(2 * self.args.rnn_hidden_dim, args.cg_payoffs_hidden_dim, payoff_out)
         # Create neural network for the duelling option
         self.duelling = args.duelling
         if self.duelling:
@@ -58,7 +73,12 @@ class DeepCoordinationGraphMAC(BasicMAC):
         inputs = th.stack([th.cat([hidden_states[:, self.edges_from], hidden_states[:, self.edges_to]], dim=-1),
                            th.cat([hidden_states[:, self.edges_to], hidden_states[:, self.edges_from]], dim=-1)], dim=0)
         # Compute the payoff matrices for all edges (and flipped counterparts)
-        output = self.payoff_fun(inputs)
+        if self.use_action_repr:
+            key = self.payoff_fun(inputs).view(-1, len(self.edges_from), 2 * self.args.action_latent_dim)
+            output = th.bmm(key, self.p_action_repr.repeat(key.shape[0], 1, 1)) / self.args.action_latent_dim / 2
+            output = output.view(inputs.shape[0], inputs.shape[1], len(self.edges_from), -1)
+        else:
+            output = self.payoff_fun(inputs)
         if self.payoff_decomposition:
             # If the payoff matrix is decomposed, we need to de-decompose it here: ...
             dim = list(output.shape[:-1])
@@ -161,6 +181,16 @@ class DeepCoordinationGraphMAC(BasicMAC):
         else:               # ... or as action tensor for the learner
             return actions
 
+    def update_action_repr(self):
+        action_repr = self.action_encoder()
+
+        self.action_repr = action_repr.detach().clone()
+
+        # Pairwise Q (|A|, al) -> (|A|, |A|, 2*al)
+        input_i = self.action_repr.unsqueeze(1).repeat(1, self.n_actions, 1)
+        input_j = self.action_repr.unsqueeze(0).repeat(self.n_actions, 1, 1)
+        self.p_action_repr = th.cat([input_i, input_j], dim=-1).view(self.n_actions * self.n_actions, -1).t().unsqueeze(0)
+
     def cuda(self):
         """ Moves this controller to the GPU, if one exists. """
         self.agent.cuda()
@@ -172,6 +202,8 @@ class DeepCoordinationGraphMAC(BasicMAC):
             self.edges_n_in = self.edges_n_in.cuda()
         if self.duelling:
             self.state_value.cuda()
+        if self.use_action_repr:
+            self.action_encoder.cuda()
 
     def parameters(self):
         """ Returns a generator for all parameters of the controller. """
@@ -187,6 +219,9 @@ class DeepCoordinationGraphMAC(BasicMAC):
         self.payoff_fun.load_state_dict(other_mac.payoff_fun.state_dict())
         if self.duelling:
             self.state_value.load_state_dict(other_mac.state_value.state_dict())
+        if self.args.use_action_repr:
+            self.action_repr = copy.deepcopy(other_mac.action_repr)
+            self.p_action_repr = copy.deepcopy(other_mac.p_action_repr)
 
     def save_models(self, path):
         """ Saves parameters to the disc. """
@@ -195,6 +230,9 @@ class DeepCoordinationGraphMAC(BasicMAC):
         th.save(self.payoff_fun.state_dict(), "{}/payoffs.th".format(path))
         if self.duelling:
             th.save(self.state_value, "{}/state_value.th".format(path))
+        if self.args.use_action_repr:
+            th.save(self.action_repr, "{}/action_repr.pt".format(path))
+            th.save(self.p_action_repr, "{}/p_action_repr.pt".format(path))
 
     def load_models(self, path):
         """ Loads parameters from the disc. """
@@ -203,6 +241,17 @@ class DeepCoordinationGraphMAC(BasicMAC):
         self.payoff_fun.load_state_dict(th.load("{}/payoffs.th".format(path), map_location=lambda storage, loc: storage))
         if self.duelling:
             self.payoff_fun.load_state_dict(th.load("{}/state_value.th".format(path), map_location=lambda storage, loc: storage))
+        if self.args.use_action_repr:
+            self.action_repr = th.load("{}/action_repr.pt".format(path),
+                                    map_location=lambda storage, loc: storage).to(self.args.device)
+            self.p_action_repr = th.load("{}/p_action_repr.pt".format(path),
+                                        map_location=lambda storage, loc: storage).to(self.args.device)
+
+    def action_encoder_params(self):
+        return list(self.action_encoder.parameters())
+
+    def action_repr_forward(self, ep_batch, t):
+        return self.action_encoder.predict(ep_batch["obs"][:, t], ep_batch["actions_onehot"][:, t])
 
     # ================== Private methods to help the constructor ======================================================
 

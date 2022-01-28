@@ -11,8 +11,8 @@ target_update_interval: 200
 
 # use the Q_Learner to train
 agent_output_type: "q"
-mac: "socg_mac"
-learner: "socg_learner"
+mac: "sopcg_mac"
+learner: "sopcg_learner"
 agent: "rnn_cg"
 double_q: True
 double_q_on_graph: True
@@ -24,8 +24,10 @@ comm_rnn_hidden_dim: 32
 single_q_hidden_dim: []
 pairwise_q_hidden_dim: [64]
 individual_q: True
+privileged_bias: False
+state_embed_dim: 32
 
-name: "socg"
+name: "sopcg"
 
 msg_anytime: True             
 msg_normalized: True
@@ -33,6 +35,13 @@ msg_normalized: True
 adversarial_training: True
 
 runner: "advtrain_cg_episode"
+
+
+action_encoder: "obs_reward"
+use_action_repr: False
+action_latent_dim: 20
+state_latent_dim: 32
+action_repr_learning_phase: 40000
 
 
 # ----- for adversary -----
@@ -52,9 +61,6 @@ adv_agent: "rnn"
 adv_mac: "basic_mac"
 adv_learner: "q_learner"
 adv_double_q: True
-adv_mixer: "qmix"
-adv_mixing_embed_dim: 32
-adv_hypernet_layers: 2
-adv_hypernet_embed: 64
+adv_mixer: "vdn"
 
-adv_name: "qmix"
+adv_name: "vdn"

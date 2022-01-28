@@ -1,9 +1,9 @@
 REGISTRY = {}
 
 from .basic_controller import BasicMAC
-from .socg_controller import SocgMAC
+from .sopcg_controller import SopcgMAC
 from .dcg_controller import DeepCoordinationGraphMAC
 
 REGISTRY["basic_mac"] = BasicMAC
-REGISTRY["socg_mac"] = SocgMAC
+REGISTRY["sopcg_mac"] = SopcgMAC
 REGISTRY["dcg_mac"] = DeepCoordinationGraphMAC

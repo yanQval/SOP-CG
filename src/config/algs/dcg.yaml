@@ -28,3 +28,10 @@ mac: "dcg_mac"                # The multi-agent controller for DCG
 mixer:                        # No mixing network for DCG
 mixing_embed_dim: 32          # Hidden dimensions of the state dependent bias function of DCG-V
 target_update_interval: 200   # Update the target network every {} episodes
+
+
+action_encoder: "obs_reward"
+use_action_repr: False
+action_latent_dim: 20
+state_latent_dim: 32
+action_repr_learning_phase: 40000
