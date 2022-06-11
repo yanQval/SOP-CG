@@ -24,7 +24,7 @@ REGISTRY["hallway"] = partial(env_fn, env=HallwayEnv)
 REGISTRY["coordination_game_matching"] = partial(env_fn, env=MatchingGameEnv)
 REGISTRY["tag"] = partial(env_fn, env=TagEnv)
 #REGISTRY["postman"] = partial(env_fn, env=PostmanEnv)
-REGISTRY["toygame"] = partial(env_fn, env=ToyEnv)
+REGISTRY["toygame"] = partial(env_fn, env=ToygameEnv)
 REGISTRY["disperse"] = partial(env_fn, env=DisperseEnv)
 REGISTRY["gather"] = partial(env_fn, env=GatherEnv)
 
