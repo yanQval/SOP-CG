@@ -5,7 +5,7 @@ from .pursuit import PursuitEnv
 from .aloha import AlohaEnv
 from .hallway import HallwayEnv
 from .coordination_games import MatchingGameEnv
-from .tag import TaggameEnv
+from .tag import TagEnv
 from .toygame import ToygameEnv
 from .disperse import DisperseEnv
 from .gather import GatherEnv
