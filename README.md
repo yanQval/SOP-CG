@@ -21,7 +21,7 @@ To run experiments on SMAC benchmark:
 python src/main.py --config=sopcg --env-config=sc2 with env_args.map_name='10m_vs_11m' construction='tree' use_action_repr=True
 ```
 
-The hyperparameter `construction` is used to control the graph class, where `tree` represents $\mathcal{G}_T$, and `matching` represents $\mathcal{G}_P$. By default, it is set to `tree`. The hyperparameter `use_action_repr` is set `False` by default. Setting `True` would use the action representation technique.
+The hyperparameter `construction` is used to control the graph class, where `tree` represents $\mathcal{G}_T$, and `matching` represents $\mathcal{G}_P$. By default, it is set to `tree`. The hyperparameter `use_action_repr` is set to `False` by default, and setting it to `True` would use the action representation learning technique.
 
 The requirements.txt file can be used to install the necessary packages into a virtual environment.
 
