@@ -75,15 +75,10 @@ class SopcgLearner:
 
             # Calculate estimated Q-Values for the current actions
             if t < batch.max_seq_length - 1:
-                # graphs_used = graphs[:, t]
                 graphs_used = self.solver.solve_given_actions(f, g, actions[:, t], device=self.args.device)
-                graphs_used = self.solver.graph_epsilon_greedy(graphs_used, self.args.graph_epsilon)
+                # graphs_used = self.solver.graph_epsilon_greedy(graphs_used, self.args.graph_epsilon)
                 mac_values = self.constructor.compute_values_given_actions(f, g, actions[:, t], graphs_used)
                 chosen_action_qvals.append(mac_values)
-
-                if self.args.communicate:
-                    self.mac.communicate(graphs_used)
-                    self.target_mac.communicate(graphs_used)
 
         chosen_action_qvals = th.stack(chosen_action_qvals, dim=1).unsqueeze(-1)
         target_max_qvals = th.stack(target_max_qvals[1:], dim=1).unsqueeze(-1)
@@ -100,10 +95,7 @@ class SopcgLearner:
         masked_td_error = td_error * mask
 
         # # Normal L2 loss, take mean over actual data
-        # loss = (masked_td_error ** 2).sum() / mask.sum()
-        # L2 loss with asymmetric objective
-        loss = ((masked_td_error * (masked_td_error >= 0)) ** 2).sum() / mask.sum() \
-               + self.args.asym_alpha * ((masked_td_error * (masked_td_error < 0)) ** 2).sum() / mask.sum()
+        loss = (masked_td_error ** 2).sum() / mask.sum()
 
         # Optimise
         self.optimiser.zero_grad()

@@ -23,21 +23,11 @@ def preprocess_values_given_actions(f, g, actions):
     g = th.gather(g, dim=-1, index=actions.unsqueeze(2).repeat(1, 1, n_agents, 1)).squeeze(-1)
     return f, g
 
-# def generate_random_graphs(bs, n, device):
-#     graphs = th.zeros(bs, n, n).to(device)
-#     m = n // 2
-#     for i in range(bs):
-#         p = th.randperm(n)
-#         graphs[i, p[:m], p[-m:]] = 1
-#         graphs[i, p[-m:], p[:m]] = 1
-#     return graphs
-
 
 class MatchingSolver:
     def __init__(self, args):
         self.blossom_lib = load_c_lib('./src/utils/blossom_lib.cpp')
         self.individual_q = args.individual_q
-        # self.individual_q = False
 
     def brute_force(self, f, g, avail_actions, device):  # bs,n,A; bs,n,n,A,A; bs,n,A
         f, g = f.detach(), g.detach()
@@ -123,11 +113,11 @@ class MatchingSolver:
 
         return best_graphs
 
-    def graph_epsilon_greedy(self, graphs, eps):
-        _graphs = np.array(copy.deepcopy(graphs.detach()).cpu()).astype(ctypes.c_double)
-        self.blossom_lib.graph_epsilon_greedy(c_ptr(_graphs), graphs.shape[0], graphs.shape[1], c_double(eps))
-        new_graphs = th.tensor(copy.deepcopy(_graphs)).to(dtype=graphs.dtype, device=graphs.device)
-        return new_graphs
+    # def graph_epsilon_greedy(self, graphs, eps):
+    #     _graphs = np.array(copy.deepcopy(graphs.detach()).cpu()).astype(ctypes.c_double)
+    #     self.blossom_lib.graph_epsilon_greedy(c_ptr(_graphs), graphs.shape[0], graphs.shape[1], c_double(eps))
+    #     new_graphs = th.tensor(copy.deepcopy(_graphs)).to(dtype=graphs.dtype, device=graphs.device)
+    #     return new_graphs
 
 
 class TreeSolver:
@@ -172,11 +162,11 @@ class TreeSolver:
 
         return best_graphs
 
-    def graph_epsilon_greedy(self, graphs, eps):
-        _graphs = np.array(copy.deepcopy(graphs.detach()).cpu()).astype(ctypes.c_double)
-        self.tree_lib.graph_epsilon_greedy(c_ptr(_graphs), graphs.shape[0], graphs.shape[1], c_double(eps))
-        new_graphs = th.tensor(copy.deepcopy(_graphs)).to(dtype=graphs.dtype, device=graphs.device)
-        return new_graphs
+    # def graph_epsilon_greedy(self, graphs, eps):
+    #     _graphs = np.array(copy.deepcopy(graphs.detach()).cpu()).astype(ctypes.c_double)
+    #     self.tree_lib.graph_epsilon_greedy(c_ptr(_graphs), graphs.shape[0], graphs.shape[1], c_double(eps))
+    #     new_graphs = th.tensor(copy.deepcopy(_graphs)).to(dtype=graphs.dtype, device=graphs.device)
+    #     return new_graphs
 
 class LineSolver:
     def __init__(self, args):

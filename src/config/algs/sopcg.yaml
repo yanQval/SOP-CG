@@ -17,13 +17,10 @@ learner: "sopcg_learner"
 agent: "rnn_cg"
 double_q: True
 double_q_on_graph: True
-communicate: False
-asym_alpha: 1.0
 construction: 'tree'
 privileged_bias: False
 state_embed_dim: 32
 
-comm_rnn_hidden_dim: 32
 single_q_hidden_dim: []
 pairwise_q_hidden_dim: [64]
 individual_q: True

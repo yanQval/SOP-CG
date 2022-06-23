@@ -11,8 +11,8 @@ using namespace std;
 const double INF = 1e30;
 const double eps = 1e-6;
 
-const int MaxN = 50;
-const int MaxM = 2500;
+const int MaxN = 50; // number of agents
+const int MaxM = 2500; // number of edges
 
 template <class T>
 inline void tension(T &a, const T &b)

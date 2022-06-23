@@ -8,8 +8,8 @@
 #include <ctime>
 using namespace std;
 
-const int maxN = 50;
-const int maxM = 50;
+const int maxN = 50; // number of agents
+const int maxM = 50; // number of edges
 const int MAX_BATCH_SIZE = 35;
 
 class Tree_Solver
